@@ -48,6 +48,8 @@ def calculate_concentration_profile(
             List of dosing times within a 24-hour period (hours, 0-24)
         plot_duration : float, optional
             Duration of simulation to plot (hours), by default 24.0
+        averaging_interval : float, optional
+            Time interval for computing average concentrations (hours), by default 4.0
 
         Returns
         -------
@@ -289,6 +291,8 @@ def update_plot(
             Comma-separated dosing times in 24h format (e.g., "8,19")
         plot_duration : float, optional
             Duration of simulation to plot (hours), by default 24.0
+        averaging_interval : float, optional
+            Time interval for computing average concentrations (hours), by default 4.0
 
         Returns
         -------
