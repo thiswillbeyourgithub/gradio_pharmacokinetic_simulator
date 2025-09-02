@@ -182,9 +182,7 @@ def create_pk_plot(
             interval_averages.append(0)
 
     # Plot averages as a step function
-    interval_plot_times = np.repeat(
-        interval_times[:-1], 2
-    )  # Duplicate for step effect
+    interval_plot_times = np.repeat(interval_times[:-1], 2)  # Duplicate for step effect
     interval_plot_concentrations = np.repeat(
         interval_averages, 2
     )  # Duplicate for step effect
@@ -341,7 +339,12 @@ def update_plot(
         return fig
 
     return create_pk_plot(
-        dose, absorption_rate_constant, half_life, dose_times, plot_duration, averaging_interval
+        dose,
+        absorption_rate_constant,
+        half_life,
+        dose_times,
+        plot_duration,
+        averaging_interval,
     )
 
 
