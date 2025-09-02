@@ -24,8 +24,7 @@ def calculate_concentration_profile(
     clearance: float,
     volume_distribution: float,
     half_life: float,
-    dosing_interval: float,
-    num_doses: int = None,
+    dose_times: List[float],
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
         Calculate plasma concentration over time for multiple dose
@@ -47,11 +46,8 @@ def calculate_concentration_profile(
             Volume of distribution (L)
         half_life : float
             Elimination half-life (hours)
-        dosing_interval : float
-            Time between doses (hours)
-        num_doses : int, optional
-            Number of doses to simulate. If None, calculated based on
-    simulation time.
+        dose_times : List[float]
+            List of dosing times within a 24-hour period (hours, 0-24)
 
         Returns
         -------
@@ -69,20 +65,24 @@ def calculate_concentration_profile(
     # Create time points with high resolution for smooth curves
     time_points = np.linspace(0, sim_duration, 1000)
 
-    # Calculate number of doses if not provided
-    if num_doses is None:
-        num_doses = int(np.ceil(sim_duration / dosing_interval)) + 1
-
     # Initialize concentration array
     concentrations = np.zeros_like(time_points)
 
     # Initial plasma concentration after IV bolus (C0 = Dose/Vd)
     c0 = dose / volume_distribution
 
-    # Apply superposition principle for multiple doses
-    for dose_number in range(num_doses):
-        dose_time = dose_number * dosing_interval
+    # Generate all dose administration times across simulation duration
+    all_dose_times = []
+    num_days = int(np.ceil(sim_duration / 24)) + 1
+    
+    for day in range(num_days):
+        for dose_time in dose_times:
+            absolute_dose_time = day * 24 + dose_time
+            if absolute_dose_time <= sim_duration:
+                all_dose_times.append(absolute_dose_time)
 
+    # Apply superposition principle for multiple doses
+    for dose_time in all_dose_times:
         # Only consider time points after this dose is given
         mask = time_points >= dose_time
         time_since_dose = time_points[mask] - dose_time
@@ -98,7 +98,7 @@ def create_pk_plot(
     clearance: float,
     volume_distribution: float,
     half_life: float,
-    dosing_interval: float,
+    dose_times: List[float],
 ) -> plt.Figure:
     """
         Create pharmacokinetic concentration-time plot.
@@ -118,8 +118,8 @@ def create_pk_plot(
             Volume of distribution (L)
         half_life : float
             Elimination half-life (hours)
-        dosing_interval : float
-            Time between doses (hours)
+        dose_times : List[float]
+            List of dosing times within a 24-hour period (hours, 0-24)
 
         Returns
         -------
@@ -132,7 +132,7 @@ def create_pk_plot(
         clearance=clearance,
         volume_distribution=volume_distribution,
         half_life=half_life,
-        dosing_interval=dosing_interval,
+        dose_times=dose_times,
     )
 
     # Create the plot with professional styling
@@ -145,21 +145,24 @@ def create_pk_plot(
 
     # Add vertical lines for dose administration times
     sim_duration = 6 * half_life
-    num_doses = int(np.ceil(sim_duration / dosing_interval)) + 1
-
-    for dose_num in range(num_doses):
-        dose_time = dose_num * dosing_interval
-        if dose_time <= sim_duration:
-            ax.axvline(x=dose_time, color="red", linestyle="--", alpha=0.6, linewidth=1)
-            if dose_num == 0:
-                ax.axvline(
-                    x=dose_time,
-                    color="red",
-                    linestyle="--",
-                    alpha=0.6,
-                    linewidth=1,
-                    label="Dose Administration",
-                )
+    num_days = int(np.ceil(sim_duration / 24)) + 1
+    
+    dose_line_added = False
+    for day in range(num_days):
+        for dose_time in dose_times:
+            absolute_dose_time = day * 24 + dose_time
+            if absolute_dose_time <= sim_duration:
+                ax.axvline(x=absolute_dose_time, color="red", linestyle="--", alpha=0.6, linewidth=1)
+                if not dose_line_added:
+                    ax.axvline(
+                        x=absolute_dose_time,
+                        color="red",
+                        linestyle="--",
+                        alpha=0.6,
+                        linewidth=1,
+                        label="Dose Administration",
+                    )
+                    dose_line_added = True
 
     # Add vertical lines at 24-hour intervals to mark days
     day_interval = 24  # hours
@@ -182,9 +185,10 @@ def create_pk_plot(
     # Formatting and labels
     ax.set_xlabel("Time (hours)", fontsize=12)
     ax.set_ylabel("Plasma Concentration (mg/L)", fontsize=12)
+    dose_times_str = ", ".join([f"{t:.1f}h" for t in dose_times])
     ax.set_title(
         f"Pharmacokinetic Profile\n"
-        f"Dose: {dose} mg, t½: {half_life} h, τ: {dosing_interval} h",
+        f"Dose: {dose} mg, t½: {half_life} h, Dosing times: {dose_times_str}",
         fontsize=14,
         fontweight="bold",
     )
@@ -204,7 +208,7 @@ def update_plot(
     clearance: float,
     volume_distribution: float,
     half_life: float,
-    dosing_interval: float,
+    dose_times_str: str,
 ) -> plt.Figure:
     """
         Wrapper function for Gradio interface to update the plot.
@@ -224,8 +228,8 @@ def update_plot(
             Volume of distribution (L)
         half_life : float
             Elimination half-life (hours)
-        dosing_interval : float
-            Time between doses (hours)
+        dose_times_str : str
+            Comma-separated dosing times in 24h format (e.g., "8,19")
 
         Returns
         -------
@@ -235,13 +239,13 @@ def update_plot(
     # Input validation to prevent errors
     if any(
         param <= 0
-        for param in [dose, clearance, volume_distribution, half_life, dosing_interval]
+        for param in [dose, clearance, volume_distribution, half_life]
     ):
         fig, ax = plt.subplots(figsize=(12, 8))
         ax.text(
             0.5,
             0.5,
-            "All parameters must be positive values",
+            "All numeric parameters must be positive values",
             horizontalalignment="center",
             verticalalignment="center",
             transform=ax.transAxes,
@@ -250,8 +254,34 @@ def update_plot(
         ax.set_title("Invalid Parameters", fontsize=14)
         return fig
 
+    # Parse dose times from string
+    try:
+        dose_times = [float(t.strip()) for t in dose_times_str.split(",") if t.strip()]
+        
+        # Validate dose times are within 0-24 hour range
+        if not dose_times:
+            raise ValueError("No dose times provided")
+        
+        for time in dose_times:
+            if time < 0 or time >= 24:
+                raise ValueError(f"Dose time {time} must be between 0 and 24 hours")
+                
+    except (ValueError, AttributeError) as e:
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.text(
+            0.5,
+            0.5,
+            f"Invalid dose times format.\nUse comma-separated hours (0-24).\nExample: '8,19' for 8am and 7pm\nError: {str(e)}",
+            horizontalalignment="center",
+            verticalalignment="center",
+            transform=ax.transAxes,
+            fontsize=14,
+        )
+        ax.set_title("Invalid Dose Times", fontsize=14)
+        return fig
+
     return create_pk_plot(
-        dose, clearance, volume_distribution, half_life, dosing_interval
+        dose, clearance, volume_distribution, half_life, dose_times
     )
 
 
@@ -303,12 +333,11 @@ def create_gradio_interface() -> gr.Interface:
             label="Half-life (hours)",
             info="Time for drug concentration to decrease by 50%",
         ),
-        gr.Number(
-            value=12,
-            minimum=0.1,
-            maximum=168,
-            label="Dosing Interval (hours)",
-            info="Time between consecutive doses",
+        gr.Textbox(
+            value="8,19",
+            label="Dosing Times (hours)",
+            info="Comma-separated times in 24h format (e.g., '8,19' for 8am and 7pm)",
+            placeholder="8,19",
         ),
     ]
 
@@ -323,12 +352,12 @@ def create_gradio_interface() -> gr.Interface:
         title="Pharmacokinetic Simulation Tool",
         description="""
         Simulate plasma drug concentrations over time with
-multiple dosing regimens.
-        Adjust the pharmacokinetic parameters and dosing interval
-to see how drug
-        accumulation patterns change. The simulation runs for 6
+custom dosing schedules.
+        Adjust the pharmacokinetic parameters and specify dosing times
+within a 24-hour period
+        to see how drug accumulation patterns change. The simulation runs for 6
 half-lives to show
-        complete elimination behavior.
+        complete elimination behavior. Example: enter "8,19" for doses at 8am and 7pm daily.
         """,
         theme=gr.themes.Soft(),
         allow_flagging="never",
