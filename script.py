@@ -113,6 +113,7 @@ def create_pk_plot(
     half_life: float,
     dose_times: List[float],
     plot_duration: float = 24.0,
+    averaging_interval: float = 4.0,
 ) -> plt.Figure:
     """
         Create pharmacokinetic concentration-time plot for oral absorption.
@@ -160,39 +161,39 @@ def create_pk_plot(
         time_points, concentrations, "b-", linewidth=2, label="Plasma Concentration"
     )
 
-    # Calculate and plot 4-hour average concentrations
-    # Create 4-hour time bins for averaging
+    # Calculate and plot average concentrations over specified intervals
+    # Create time bins for averaging based on the configurable interval
     max_hours = int(np.ceil(plot_duration))
-    four_hour_times = np.arange(0, max_hours + 1, 4)
-    four_hour_averages = []
+    interval_times = np.arange(0, max_hours + averaging_interval, averaging_interval)
+    interval_averages = []
 
-    for i in range(len(four_hour_times) - 1):
-        start_time = four_hour_times[i]
-        end_time = four_hour_times[i + 1]
-        # Find all time points within this 4-hour interval
+    for i in range(len(interval_times) - 1):
+        start_time = interval_times[i]
+        end_time = interval_times[i + 1]
+        # Find all time points within this interval
         interval_mask = (time_points >= start_time) & (time_points < end_time)
         if np.any(interval_mask):
-            # Calculate average concentration for this 4-hour interval
+            # Calculate average concentration for this interval
             avg_conc = np.mean(concentrations[interval_mask])
-            four_hour_averages.append(avg_conc)
+            interval_averages.append(avg_conc)
         else:
-            four_hour_averages.append(0)
+            interval_averages.append(0)
 
-    # Plot 4-hour averages as a step function
-    four_hour_plot_times = np.repeat(
-        four_hour_times[:-1], 2
+    # Plot averages as a step function
+    interval_plot_times = np.repeat(
+        interval_times[:-1], 2
     )  # Duplicate for step effect
-    four_hour_plot_concentrations = np.repeat(
-        four_hour_averages, 2
+    interval_plot_concentrations = np.repeat(
+        interval_averages, 2
     )  # Duplicate for step effect
 
     ax.plot(
-        four_hour_plot_times,
-        four_hour_plot_concentrations,
+        interval_plot_times,
+        interval_plot_concentrations,
         "g-",
         linewidth=2,
         alpha=0.7,
-        label="4-Hour Average Concentration",
+        label=f"{averaging_interval:.1f}h Average Concentration",
     )
 
     # Add vertical lines for dose administration times
@@ -266,6 +267,7 @@ def update_plot(
     half_life: float,
     dose_times_str: str,
     plot_duration: float = 24.0,
+    averaging_interval: float = 4.0,
 ) -> plt.Figure:
     """
         Wrapper function for Gradio interface to update the plot.
@@ -335,7 +337,7 @@ def update_plot(
         return fig
 
     return create_pk_plot(
-        dose, absorption_rate_constant, half_life, dose_times, plot_duration
+        dose, absorption_rate_constant, half_life, dose_times, plot_duration, averaging_interval
     )
 
 
@@ -392,6 +394,14 @@ def create_gradio_interface() -> gr.Interface:
             step=1,
             label="Plot Duration (hours)",
             info="Total duration to simulate and plot (1-168 hours, default 24h)",
+        ),
+        gr.Slider(
+            minimum=0.5,
+            maximum=24,
+            value=4.0,
+            step=0.5,
+            label="Averaging Interval (hours)",
+            info="Time interval for computing average concentrations (0.5-24 hours)",
         ),
     ]
 
