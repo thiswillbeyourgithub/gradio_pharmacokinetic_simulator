@@ -179,7 +179,9 @@ def create_pk_plot(
             four_hour_averages.append(0)
 
     # Plot 4-hour averages as a step function
-    four_hour_plot_times = np.repeat(four_hour_times[:-1], 2)  # Duplicate for step effect
+    four_hour_plot_times = np.repeat(
+        four_hour_times[:-1], 2
+    )  # Duplicate for step effect
     four_hour_plot_concentrations = np.repeat(
         four_hour_averages, 2
     )  # Duplicate for step effect
