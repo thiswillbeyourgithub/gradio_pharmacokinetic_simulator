@@ -297,7 +297,9 @@ def update_plot(
         ax.set_title("Invalid Dose Times", fontsize=14)
         return fig
 
-    return create_pk_plot(dose, absorption_rate_constant, half_life, dose_times, plot_duration)
+    return create_pk_plot(
+        dose, absorption_rate_constant, half_life, dose_times, plot_duration
+    )
 
 
 def create_gradio_interface() -> gr.Interface:
