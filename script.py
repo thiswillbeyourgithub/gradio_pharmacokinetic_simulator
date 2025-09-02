@@ -157,6 +157,35 @@ def create_pk_plot(
         time_points, concentrations, "b-", linewidth=2, label="Plasma Concentration"
     )
 
+    # Calculate and plot hourly average concentrations
+    # Create hourly time bins for averaging
+    max_hours = int(np.ceil(sim_duration))
+    hourly_times = np.arange(0, max_hours + 1)
+    hourly_averages = []
+    
+    for hour in range(max_hours):
+        # Find all time points within this hour
+        hour_mask = (time_points >= hour) & (time_points < hour + 1)
+        if np.any(hour_mask):
+            # Calculate average concentration for this hour
+            avg_conc = np.mean(concentrations[hour_mask])
+            hourly_averages.append(avg_conc)
+        else:
+            hourly_averages.append(0)
+    
+    # Plot hourly averages as a step function
+    hourly_plot_times = np.repeat(hourly_times[:-1], 2)  # Duplicate for step effect
+    hourly_plot_concentrations = np.repeat(hourly_averages, 2)  # Duplicate for step effect
+    
+    ax.plot(
+        hourly_plot_times, 
+        hourly_plot_concentrations, 
+        "g-", 
+        linewidth=2, 
+        alpha=0.7,
+        label="Hourly Average Concentration"
+    )
+
     # Add vertical lines for dose administration times
     sim_duration = plot_duration
     num_days = int(np.ceil(sim_duration / 24)) + 1
