@@ -140,6 +140,9 @@ def create_pk_plot(
         fig : matplotlib.figure.Figure
             The generated plot figure
     """
+    # Use specified plot duration
+    sim_duration = plot_duration
+    
     # Calculate concentration profile
     time_points, concentrations = calculate_concentration_profile(
         dose=dose,
