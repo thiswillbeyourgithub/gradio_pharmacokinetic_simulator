@@ -21,29 +21,26 @@ matplotlib.use("Agg")  # Use non-interactive backend for web deployment
 
 def calculate_concentration_profile(
     dose: float,
-    clearance: float,
-    volume_distribution: float,
+    absorption_rate_constant: float,
     half_life: float,
     dose_times: List[float],
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
         Calculate plasma concentration over time for multiple dose
-    regimen.
+    regimen with oral absorption.
 
-        Uses first-order elimination kinetics and superposition
-    principle to model
-        drug accumulation. Each dose is treated as an independent IV
-    bolus with
-        exponential decay.
+        Uses first-order absorption and elimination kinetics with
+    superposition principle 
+        to model drug accumulation. Each dose is treated as an
+    independent oral dose with
+        first-order absorption followed by first-order elimination.
 
         Parameters
         ----------
         dose : float
             Single dose amount (mg)
-        clearance : float
-            Drug clearance (L/h)
-        volume_distribution : float
-            Volume of distribution (L)
+        absorption_rate_constant : float
+            First-order absorption rate constant (1/h)
         half_life : float
             Elimination half-life (hours)
         dose_times : List[float]
@@ -54,10 +51,13 @@ def calculate_concentration_profile(
         time_points : np.ndarray
             Time points for simulation (hours)
         concentrations : np.ndarray
-            Plasma concentrations at each time point (mg/L)
+            Plasma concentrations at each time point (normalized units)
     """
     # Calculate elimination rate constant from half-life
     k_elimination = np.log(2) / half_life
+    
+    # Absorption rate constant
+    ka = absorption_rate_constant
 
     # Simulation duration: 6 times the half-life to show complete elimination
     sim_duration = 6 * half_life
@@ -67,9 +67,6 @@ def calculate_concentration_profile(
 
     # Initialize concentration array
     concentrations = np.zeros_like(time_points)
-
-    # Initial plasma concentration after IV bolus (C0 = Dose/Vd)
-    c0 = dose / volume_distribution
 
     # Generate all dose administration times across simulation duration
     all_dose_times = []
@@ -87,35 +84,40 @@ def calculate_concentration_profile(
         mask = time_points >= dose_time
         time_since_dose = time_points[mask] - dose_time
 
-        # Add exponential decay from this dose to total concentration
-        concentrations[mask] += c0 * np.exp(-k_elimination * time_since_dose)
+        # First-order absorption and elimination model
+        # C(t) = (Dose * ka) / (ka - ke) * (exp(-ke*t) - exp(-ka*t))
+        # Assumes volume of distribution = 1L for normalized concentrations
+        if ka != k_elimination:  # Avoid division by zero
+            absorption_term = np.exp(-k_elimination * time_since_dose)
+            elimination_term = np.exp(-ka * time_since_dose)
+            concentrations[mask] += (dose * ka) / (ka - k_elimination) * (absorption_term - elimination_term)
+        else:
+            # Special case when ka = ke (flip-flop kinetics)
+            concentrations[mask] += dose * ka * time_since_dose * np.exp(-ka * time_since_dose)
 
     return time_points, concentrations
 
 
 def create_pk_plot(
     dose: float,
-    clearance: float,
-    volume_distribution: float,
+    absorption_rate_constant: float,
     half_life: float,
     dose_times: List[float],
 ) -> plt.Figure:
     """
-        Create pharmacokinetic concentration-time plot.
+        Create pharmacokinetic concentration-time plot for oral absorption.
 
         Generates a matplotlib figure showing plasma concentration
     over time with
-        multiple dosing. Includes styling and annotations for better
+        multiple oral dosing. Includes styling and annotations for better
     interpretation.
 
         Parameters
         ----------
         dose : float
             Single dose amount (mg)
-        clearance : float
-            Drug clearance (L/h)
-        volume_distribution : float
-            Volume of distribution (L)
+        absorption_rate_constant : float
+            First-order absorption rate constant (1/h)
         half_life : float
             Elimination half-life (hours)
         dose_times : List[float]
@@ -129,8 +131,7 @@ def create_pk_plot(
     # Calculate concentration profile
     time_points, concentrations = calculate_concentration_profile(
         dose=dose,
-        clearance=clearance,
-        volume_distribution=volume_distribution,
+        absorption_rate_constant=absorption_rate_constant,
         half_life=half_life,
         dose_times=dose_times,
     )
@@ -190,11 +191,11 @@ def create_pk_plot(
 
     # Formatting and labels
     ax.set_xlabel("Time (hours)", fontsize=12)
-    ax.set_ylabel("Plasma Concentration (mg/L)", fontsize=12)
+    ax.set_ylabel("Plasma Concentration (normalized units)", fontsize=12)
     dose_times_str = ", ".join([f"{t:.1f}h" for t in dose_times])
     ax.set_title(
-        f"Pharmacokinetic Profile\n"
-        f"Dose: {dose} mg, t½: {half_life} h, Dosing times: {dose_times_str}",
+        f"Pharmacokinetic Profile (Oral Absorption)\n"
+        f"Dose: {dose} mg, ka: {absorption_rate_constant:.2f} h⁻¹, t½: {half_life} h, Dosing times: {dose_times_str}",
         fontsize=14,
         fontweight="bold",
     )
@@ -211,8 +212,7 @@ def create_pk_plot(
 
 def update_plot(
     dose: float,
-    clearance: float,
-    volume_distribution: float,
+    absorption_rate_constant: float,
     half_life: float,
     dose_times_str: str,
 ) -> plt.Figure:
@@ -228,10 +228,8 @@ def update_plot(
         ----------
         dose : float
             Single dose amount (mg)
-        clearance : float
-            Drug clearance (L/h)
-        volume_distribution : float
-            Volume of distribution (L)
+        absorption_rate_constant : float
+            First-order absorption rate constant (1/h)
         half_life : float
             Elimination half-life (hours)
         dose_times_str : str
@@ -243,7 +241,7 @@ def update_plot(
             Updated plot figure
     """
     # Input validation to prevent errors
-    if any(param <= 0 for param in [dose, clearance, volume_distribution, half_life]):
+    if any(param <= 0 for param in [dose, absorption_rate_constant, half_life]):
         fig, ax = plt.subplots(figsize=(12, 8))
         ax.text(
             0.5,
@@ -283,7 +281,7 @@ def update_plot(
         ax.set_title("Invalid Dose Times", fontsize=14)
         return fig
 
-    return create_pk_plot(dose, clearance, volume_distribution, half_life, dose_times)
+    return create_pk_plot(dose, absorption_rate_constant, half_life, dose_times)
 
 
 def create_gradio_interface() -> gr.Interface:
@@ -312,19 +310,11 @@ def create_gradio_interface() -> gr.Interface:
         ),
         gr.Slider(
             minimum=0.1,
-            maximum=50,
-            value=5,
+            maximum=10,
+            value=1.0,
             step=0.1,
-            label="Clearance (L/h)",
-            info="Rate of drug elimination from the body",
-        ),
-        gr.Slider(
-            minimum=1,
-            maximum=500,
-            value=70,
-            step=1,
-            label="Volume of Distribution (L)",
-            info="Apparent volume in which drug distributes",
+            label="Absorption Rate Constant (1/h)",
+            info="First-order absorption rate constant (ka)",
         ),
         gr.Slider(
             minimum=0.5,
@@ -353,12 +343,12 @@ def create_gradio_interface() -> gr.Interface:
         title="Pharmacokinetic Simulation Tool",
         description="""
         Simulate plasma drug concentrations over time with
-custom dosing schedules.
-        Adjust the pharmacokinetic parameters and specify dosing times
+custom oral dosing schedules.
+        Adjust the absorption rate constant (ka) and half-life parameters, and specify dosing times
 within a 24-hour period
-        to see how drug accumulation patterns change. The simulation runs for 6
-half-lives to show
-        complete elimination behavior. Example: enter "8,19" for doses at 8am and 7pm daily.
+        to see how drug accumulation patterns change. The simulation models first-order absorption
+        and elimination kinetics, running for 6 half-lives to show complete elimination behavior.
+        Example: enter "8,19" for doses at 8am and 7pm daily.
         """,
         theme=gr.themes.Soft(),
         allow_flagging="never",
