@@ -78,7 +78,7 @@ def calculate_concentration_profile(
     for day in range(num_days):
         for dose_time in dose_times:
             absolute_dose_time = day * 24 + dose_time
-            if absolute_dose_time <= sim_duration:
+            if absolute_dose_time <= plot_duration:
                 all_dose_times.append(absolute_dose_time)
 
     # Apply superposition principle for multiple doses
@@ -159,7 +159,7 @@ def create_pk_plot(
 
     # Calculate and plot hourly average concentrations
     # Create hourly time bins for averaging
-    max_hours = int(np.ceil(sim_duration))
+    max_hours = int(np.ceil(plot_duration))
     hourly_times = np.arange(0, max_hours + 1)
     hourly_averages = []
 
@@ -189,8 +189,7 @@ def create_pk_plot(
     )
 
     # Add vertical lines for dose administration times
-    sim_duration = plot_duration
-    num_days = int(np.ceil(sim_duration / 24)) + 1
+    num_days = int(np.ceil(plot_duration / 24)) + 1
 
     dose_line_added = False
     for day in range(num_days):
@@ -217,11 +216,11 @@ def create_pk_plot(
 
     # Add vertical lines at 24-hour intervals to mark days
     day_interval = 24  # hours
-    num_days = int(np.ceil(sim_duration / day_interval)) + 1
+    num_days = int(np.ceil(plot_duration / day_interval)) + 1
 
     for day_num in range(1, num_days):  # Start from day 1, skip day 0
         day_time = day_num * day_interval
-        if day_time <= sim_duration:
+        if day_time <= plot_duration:
             ax.axvline(x=day_time, color="gray", linestyle=":", alpha=0.7, linewidth=2)
             if day_num == 1:
                 ax.axvline(
@@ -248,7 +247,7 @@ def create_pk_plot(
 
     # Set reasonable y-axis limits
     ax.set_ylim(0, np.max(concentrations) * 1.1)
-    ax.set_xlim(0, sim_duration)
+    ax.set_xlim(0, plot_duration)
 
     plt.tight_layout()
     return fig
