@@ -30,7 +30,7 @@ def calculate_concentration_profile(
     regimen with oral absorption.
 
         Uses first-order absorption and elimination kinetics with
-    superposition principle 
+    superposition principle
         to model drug accumulation. Each dose is treated as an
     independent oral dose with
         first-order absorption followed by first-order elimination.
@@ -55,7 +55,7 @@ def calculate_concentration_profile(
     """
     # Calculate elimination rate constant from half-life
     k_elimination = np.log(2) / half_life
-    
+
     # Absorption rate constant
     ka = absorption_rate_constant
 
@@ -90,10 +90,16 @@ def calculate_concentration_profile(
         if ka != k_elimination:  # Avoid division by zero
             absorption_term = np.exp(-k_elimination * time_since_dose)
             elimination_term = np.exp(-ka * time_since_dose)
-            concentrations[mask] += (dose * ka) / (ka - k_elimination) * (absorption_term - elimination_term)
+            concentrations[mask] += (
+                (dose * ka)
+                / (ka - k_elimination)
+                * (absorption_term - elimination_term)
+            )
         else:
             # Special case when ka = ke (flip-flop kinetics)
-            concentrations[mask] += dose * ka * time_since_dose * np.exp(-ka * time_since_dose)
+            concentrations[mask] += (
+                dose * ka * time_since_dose * np.exp(-ka * time_since_dose)
+            )
 
     return time_points, concentrations
 
