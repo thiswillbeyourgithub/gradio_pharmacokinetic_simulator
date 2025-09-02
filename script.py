@@ -184,14 +184,14 @@ def create_pk_plot(
     for day_num in range(1, num_days):  # Start from day 1, skip day 0
         day_time = day_num * day_interval
         if day_time <= sim_duration:
-            ax.axvline(x=day_time, color="gray", linestyle=":", alpha=0.4, linewidth=1)
+            ax.axvline(x=day_time, color="gray", linestyle=":", alpha=0.7, linewidth=2)
             if day_num == 1:
                 ax.axvline(
                     x=day_time,
                     color="gray",
                     linestyle=":",
-                    alpha=0.4,
-                    linewidth=1,
+                    alpha=0.7,
+                    linewidth=2,
                     label="24h Intervals",
                 )
 
