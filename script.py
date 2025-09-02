@@ -164,7 +164,7 @@ def create_pk_plot(
     # Add vertical lines at 24-hour intervals to mark days
     day_interval = 24  # hours
     num_days = int(np.ceil(sim_duration / day_interval)) + 1
-    
+
     for day_num in range(1, num_days):  # Start from day 1, skip day 0
         day_time = day_num * day_interval
         if day_time <= sim_duration:
@@ -172,7 +172,7 @@ def create_pk_plot(
             if day_num == 1:
                 ax.axvline(
                     x=day_time,
-                    color="gray", 
+                    color="gray",
                     linestyle=":",
                     alpha=0.4,
                     linewidth=1,
