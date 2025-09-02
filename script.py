@@ -24,6 +24,7 @@ def calculate_concentration_profile(
     absorption_rate_constant: float,
     half_life: float,
     dose_times: List[float],
+    plot_duration: float = 24.0,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
         Calculate plasma concentration over time for multiple dose
@@ -45,6 +46,8 @@ def calculate_concentration_profile(
             Elimination half-life (hours)
         dose_times : List[float]
             List of dosing times within a 24-hour period (hours, 0-24)
+        plot_duration : float, optional
+            Duration of simulation to plot (hours), by default 24.0
 
         Returns
         -------
@@ -59,8 +62,8 @@ def calculate_concentration_profile(
     # Absorption rate constant
     ka = absorption_rate_constant
 
-    # Simulation duration: 6 times the half-life to show complete elimination
-    sim_duration = 6 * half_life
+    # Use specified plot duration
+    sim_duration = plot_duration
 
     # Create time points with high resolution for smooth curves
     time_points = np.linspace(0, sim_duration, 1000)
@@ -109,6 +112,7 @@ def create_pk_plot(
     absorption_rate_constant: float,
     half_life: float,
     dose_times: List[float],
+    plot_duration: float = 24.0,
 ) -> plt.Figure:
     """
         Create pharmacokinetic concentration-time plot for oral absorption.
@@ -128,6 +132,8 @@ def create_pk_plot(
             Elimination half-life (hours)
         dose_times : List[float]
             List of dosing times within a 24-hour period (hours, 0-24)
+        plot_duration : float, optional
+            Duration of simulation to plot (hours), by default 24.0
 
         Returns
         -------
@@ -140,6 +146,7 @@ def create_pk_plot(
         absorption_rate_constant=absorption_rate_constant,
         half_life=half_life,
         dose_times=dose_times,
+        plot_duration=plot_duration,
     )
 
     # Create the plot with professional styling
@@ -151,7 +158,7 @@ def create_pk_plot(
     )
 
     # Add vertical lines for dose administration times
-    sim_duration = 6 * half_life
+    sim_duration = plot_duration
     num_days = int(np.ceil(sim_duration / 24)) + 1
 
     dose_line_added = False
@@ -221,6 +228,7 @@ def update_plot(
     absorption_rate_constant: float,
     half_life: float,
     dose_times_str: str,
+    plot_duration: float = 24.0,
 ) -> plt.Figure:
     """
         Wrapper function for Gradio interface to update the plot.
@@ -240,6 +248,8 @@ def update_plot(
             Elimination half-life (hours)
         dose_times_str : str
             Comma-separated dosing times in 24h format (e.g., "8,19")
+        plot_duration : float, optional
+            Duration of simulation to plot (hours), by default 24.0
 
         Returns
         -------
@@ -287,7 +297,7 @@ def update_plot(
         ax.set_title("Invalid Dose Times", fontsize=14)
         return fig
 
-    return create_pk_plot(dose, absorption_rate_constant, half_life, dose_times)
+    return create_pk_plot(dose, absorption_rate_constant, half_life, dose_times, plot_duration)
 
 
 def create_gradio_interface() -> gr.Interface:
@@ -336,6 +346,14 @@ def create_gradio_interface() -> gr.Interface:
             info="Comma-separated times in 24h format (e.g., '8,19' for 8am and 7pm)",
             placeholder="8,19",
         ),
+        gr.Slider(
+            minimum=1,
+            maximum=168,
+            value=24,
+            step=1,
+            label="Plot Duration (hours)",
+            info="Total duration to simulate and plot (1-168 hours, default 24h)",
+        ),
     ]
 
     # Define output component
@@ -353,7 +371,7 @@ custom oral dosing schedules.
         Adjust the absorption rate constant (ka) and half-life parameters, and specify dosing times
 within a 24-hour period
         to see how drug accumulation patterns change. The simulation models first-order absorption
-        and elimination kinetics, running for 6 half-lives to show complete elimination behavior.
+        and elimination kinetics. You can control the plot duration to see short-term or long-term behavior.
         Example: enter "8,19" for doses at 8am and 7pm daily.
         """,
         theme=gr.themes.Soft(),
