@@ -74,7 +74,7 @@ def calculate_concentration_profile(
     # Generate all dose administration times across simulation duration
     all_dose_times = []
     num_days = int(np.ceil(sim_duration / 24)) + 1
-    
+
     for day in range(num_days):
         for dose_time in dose_times:
             absolute_dose_time = day * 24 + dose_time
@@ -146,13 +146,19 @@ def create_pk_plot(
     # Add vertical lines for dose administration times
     sim_duration = 6 * half_life
     num_days = int(np.ceil(sim_duration / 24)) + 1
-    
+
     dose_line_added = False
     for day in range(num_days):
         for dose_time in dose_times:
             absolute_dose_time = day * 24 + dose_time
             if absolute_dose_time <= sim_duration:
-                ax.axvline(x=absolute_dose_time, color="red", linestyle="--", alpha=0.6, linewidth=1)
+                ax.axvline(
+                    x=absolute_dose_time,
+                    color="red",
+                    linestyle="--",
+                    alpha=0.6,
+                    linewidth=1,
+                )
                 if not dose_line_added:
                     ax.axvline(
                         x=absolute_dose_time,
@@ -237,10 +243,7 @@ def update_plot(
             Updated plot figure
     """
     # Input validation to prevent errors
-    if any(
-        param <= 0
-        for param in [dose, clearance, volume_distribution, half_life]
-    ):
+    if any(param <= 0 for param in [dose, clearance, volume_distribution, half_life]):
         fig, ax = plt.subplots(figsize=(12, 8))
         ax.text(
             0.5,
@@ -257,15 +260,15 @@ def update_plot(
     # Parse dose times from string
     try:
         dose_times = [float(t.strip()) for t in dose_times_str.split(",") if t.strip()]
-        
+
         # Validate dose times are within 0-24 hour range
         if not dose_times:
             raise ValueError("No dose times provided")
-        
+
         for time in dose_times:
             if time < 0 or time >= 24:
                 raise ValueError(f"Dose time {time} must be between 0 and 24 hours")
-                
+
     except (ValueError, AttributeError) as e:
         fig, ax = plt.subplots(figsize=(12, 8))
         ax.text(
@@ -280,9 +283,7 @@ def update_plot(
         ax.set_title("Invalid Dose Times", fontsize=14)
         return fig
 
-    return create_pk_plot(
-        dose, clearance, volume_distribution, half_life, dose_times
-    )
+    return create_pk_plot(dose, clearance, volume_distribution, half_life, dose_times)
 
 
 def create_gradio_interface() -> gr.Interface:
