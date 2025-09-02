@@ -16,8 +16,7 @@ import numpy as np
 from typing import Tuple, List
 import matplotlib
 
-matplotlib.use("Agg")  # Use non-interactive backend for web
-deployment
+matplotlib.use("Agg")  # Use non-interactive backend for web deployment
 
 
 def calculate_concentration_profile(
@@ -160,6 +159,24 @@ def create_pk_plot(
                     alpha=0.6,
                     linewidth=1,
                     label="Dose Administration",
+                )
+
+    # Add vertical lines at 24-hour intervals to mark days
+    day_interval = 24  # hours
+    num_days = int(np.ceil(sim_duration / day_interval)) + 1
+    
+    for day_num in range(1, num_days):  # Start from day 1, skip day 0
+        day_time = day_num * day_interval
+        if day_time <= sim_duration:
+            ax.axvline(x=day_time, color="gray", linestyle=":", alpha=0.4, linewidth=1)
+            if day_num == 1:
+                ax.axvline(
+                    x=day_time,
+                    color="gray", 
+                    linestyle=":",
+                    alpha=0.4,
+                    linewidth=1,
+                    label="24h Intervals",
                 )
 
     # Formatting and labels
