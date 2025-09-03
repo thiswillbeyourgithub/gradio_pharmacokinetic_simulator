@@ -416,9 +416,12 @@ def create_gradio_interface() -> gr.Interface:
     outputs = gr.Plot(label="Pharmacokinetic Profile")
 
     # Create interface with professional styling and model assumptions
-    with gr.Blocks(theme=gr.themes.Soft(), title="Pharmacokinetic Simulation Tool") as iface:
+    with gr.Blocks(
+        theme=gr.themes.Soft(), title="Pharmacokinetic Simulation Tool"
+    ) as iface:
         gr.Markdown("# Pharmacokinetic Simulation Tool")
-        gr.Markdown("""
+        gr.Markdown(
+            """
         Simulate plasma drug concentrations over time with custom oral dosing schedules.
         Adjust the absorption rate constant (ka) and half-life parameters, and specify dosing times
         within a 24-hour period to see how drug accumulation patterns change. 
@@ -426,10 +429,12 @@ def create_gradio_interface() -> gr.Interface:
         <a href="https://go.drugbank.com/drugs/" target="_blank">Find drug parameters (half-life, etc.) on DrugBank</a>
         
         Example: enter "8,19" for doses at 8am and 7pm daily.
-        """)
-        
+        """
+        )
+
         with gr.Accordion("Model Assumptions & Mathematical Formula", open=False):
-            gr.Markdown("""
+            gr.Markdown(
+                """
             ### Single Compartment Pharmacokinetic Model
             
             **Key Assumptions:**
@@ -461,8 +466,9 @@ def create_gradio_interface() -> gr.Interface:
             ```
             C(t) = Dose × ka × t × exp(-ka × t)
             ```
-            """)
-        
+            """
+            )
+
         with gr.Row():
             with gr.Column():
                 dose_input = inputs[0]
@@ -471,23 +477,44 @@ def create_gradio_interface() -> gr.Interface:
                 dose_times_input = inputs[3]
                 plot_duration_input = inputs[4]
                 averaging_interval_input = inputs[5]
-            
+
             with gr.Column():
                 plot_output = outputs
-        
+
         # Connect inputs to the update function
-        for input_component in [dose_input, ka_input, half_life_input, dose_times_input, plot_duration_input, averaging_interval_input]:
+        for input_component in [
+            dose_input,
+            ka_input,
+            half_life_input,
+            dose_times_input,
+            plot_duration_input,
+            averaging_interval_input,
+        ]:
             input_component.change(
                 fn=update_plot,
-                inputs=[dose_input, ka_input, half_life_input, dose_times_input, plot_duration_input, averaging_interval_input],
-                outputs=plot_output
+                inputs=[
+                    dose_input,
+                    ka_input,
+                    half_life_input,
+                    dose_times_input,
+                    plot_duration_input,
+                    averaging_interval_input,
+                ],
+                outputs=plot_output,
             )
-        
+
         # Set initial plot
         iface.load(
             fn=update_plot,
-            inputs=[dose_input, ka_input, half_life_input, dose_times_input, plot_duration_input, averaging_interval_input],
-            outputs=plot_output
+            inputs=[
+                dose_input,
+                ka_input,
+                half_life_input,
+                dose_times_input,
+                plot_duration_input,
+                averaging_interval_input,
+            ],
+            outputs=plot_output,
         )
 
     return iface
