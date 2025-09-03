@@ -257,7 +257,7 @@ def create_pk_plot(
     first_24h_mask = time_points <= 24.0
     concentrations_24h = concentrations[first_24h_mask]
     time_points_24h = time_points[first_24h_mask]
-    
+
     max_concentration = np.max(concentrations_24h)
     max_time_index = np.argmax(concentrations_24h)
     time_at_max = time_points_24h[max_time_index]
