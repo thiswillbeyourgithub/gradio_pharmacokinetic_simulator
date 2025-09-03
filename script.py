@@ -338,7 +338,7 @@ def update_plot(
         plot_duration = 1.0
     if averaging_interval is None:
         averaging_interval = 4.0
-    
+
     # Convert plot duration from days to hours for calculations
     plot_duration_hours = plot_duration * 24
 
