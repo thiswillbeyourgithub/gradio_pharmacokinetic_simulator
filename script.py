@@ -163,38 +163,39 @@ def create_pk_plot(
         time_points, concentrations, "b-", linewidth=2, label="Plasma Concentration"
     )
 
-    # Calculate and plot average concentrations over specified intervals
-    # Create time bins for averaging based on the configurable interval
-    max_hours = int(np.ceil(plot_duration))
-    interval_times = np.arange(0, max_hours + averaging_interval, averaging_interval)
-    interval_averages = []
+    # Calculate rolling average concentrations for smooth curve
+    # Use a rolling window approach to compute moving averages
+    rolling_times = []
+    rolling_averages = []
+    
+    # Sample every 0.1 hours for smooth curve while maintaining performance
+    time_step = 0.1
+    sample_times = np.arange(averaging_interval, plot_duration + time_step, time_step)
+    
+    for current_time in sample_times:
+        # Define the window for averaging (current_time - averaging_interval to current_time)
+        window_start = current_time - averaging_interval
+        window_end = current_time
+        
+        # Find all concentration points within this rolling window
+        window_mask = (time_points >= window_start) & (time_points <= window_end)
+        
+        if np.any(window_mask):
+            # Calculate average concentration over this rolling window
+            window_avg = np.mean(concentrations[window_mask])
+            rolling_times.append(current_time)
+            rolling_averages.append(window_avg)
 
-    for i in range(len(interval_times) - 1):
-        start_time = interval_times[i]
-        end_time = interval_times[i + 1]
-        # Find all time points within this interval
-        interval_mask = (time_points >= start_time) & (time_points < end_time)
-        if np.any(interval_mask):
-            # Calculate average concentration for this interval
-            avg_conc = np.mean(concentrations[interval_mask])
-            interval_averages.append(avg_conc)
-        else:
-            interval_averages.append(0)
-
-    # Plot averages as a step function
-    interval_plot_times = np.repeat(interval_times[:-1], 2)  # Duplicate for step effect
-    interval_plot_concentrations = np.repeat(
-        interval_averages, 2
-    )  # Duplicate for step effect
-
-    ax.plot(
-        interval_plot_times,
-        interval_plot_concentrations,
-        "g-",
-        linewidth=2,
-        alpha=0.7,
-        label=f"{averaging_interval:.1f}h Average Concentration",
-    )
+    # Plot the smooth rolling average curve
+    if rolling_times:  # Only plot if we have data points
+        ax.plot(
+            rolling_times,
+            rolling_averages,
+            "g-",
+            linewidth=2,
+            alpha=0.7,
+            label=f"{averaging_interval:.1f}h Rolling Average",
+        )
 
     # Add vertical lines for dose administration times
     num_days = int(np.ceil(plot_duration / 24)) + 1
