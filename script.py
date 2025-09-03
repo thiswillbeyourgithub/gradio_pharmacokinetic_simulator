@@ -261,7 +261,7 @@ def create_pk_plot(
     max_concentration = np.max(concentrations_24h)
     max_time_index = np.argmax(concentrations_24h)
     time_at_max = time_points_24h[max_time_index]
-    
+
     # Calculate Tmax relative to first dose time
     first_dose_time = min(dose_times)
     relative_tmax = time_at_max - first_dose_time
