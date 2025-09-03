@@ -415,13 +415,10 @@ def create_gradio_interface() -> gr.Interface:
     # Define output component
     outputs = gr.Plot(label="Pharmacokinetic Profile")
 
-    # Create interface with professional styling
-    iface = gr.Interface(
-        fn=update_plot,
-        inputs=inputs,
-        outputs=outputs,
-        title="Pharmacokinetic Simulation Tool",
-        description="""
+    # Create interface with professional styling and model assumptions
+    with gr.Blocks(theme=gr.themes.Soft(), title="Pharmacokinetic Simulation Tool") as iface:
+        gr.Markdown("# Pharmacokinetic Simulation Tool")
+        gr.Markdown("""
         Simulate plasma drug concentrations over time with custom oral dosing schedules.
         Adjust the absorption rate constant (ka) and half-life parameters, and specify dosing times
         within a 24-hour period to see how drug accumulation patterns change. 
@@ -429,10 +426,69 @@ def create_gradio_interface() -> gr.Interface:
         <a href="https://go.drugbank.com/drugs/" target="_blank">Find drug parameters (half-life, etc.) on DrugBank</a>
         
         Example: enter "8,19" for doses at 8am and 7pm daily.
-        """,
-        theme=gr.themes.Soft(),
-        allow_flagging="never",
-    )
+        """)
+        
+        with gr.Accordion("Model Assumptions & Mathematical Formula", open=False):
+            gr.Markdown("""
+            ### Single Compartment Pharmacokinetic Model
+            
+            **Key Assumptions:**
+            - **Single compartment model**: The body is treated as a single, well-mixed compartment
+            - **First-order absorption**: Drug absorption from the gut follows first-order kinetics
+            - **First-order elimination**: Drug elimination follows first-order kinetics
+            - **Volume of distribution = 1L**: For normalized concentration units
+            - **Linear kinetics**: No saturation effects (valid for therapeutic doses)
+            - **Superposition principle**: Multiple doses are additive in effect
+            
+            **Mathematical Formula:**
+            
+            For oral absorption with first-order kinetics:
+            
+            ```
+            C(t) = (Dose × ka) / (ka - ke) × [exp(-ke × t) - exp(-ka × t)]
+            ```
+            
+            Where:
+            - **C(t)** = Plasma concentration at time t
+            - **Dose** = Amount of drug administered (mg)
+            - **ka** = Absorption rate constant (h⁻¹)
+            - **ke** = Elimination rate constant (h⁻¹) = ln(2) / half-life
+            - **t** = Time since dose administration (hours)
+            
+            **For multiple doses:** The concentration at any time is the sum of contributions from all previous doses (superposition principle).
+            
+            **Special case:** When ka = ke (flip-flop kinetics):
+            ```
+            C(t) = Dose × ka × t × exp(-ka × t)
+            ```
+            """)
+        
+        with gr.Row():
+            with gr.Column():
+                dose_input = inputs[0]
+                ka_input = inputs[1]
+                half_life_input = inputs[2]
+                dose_times_input = inputs[3]
+                plot_duration_input = inputs[4]
+                averaging_interval_input = inputs[5]
+            
+            with gr.Column():
+                plot_output = outputs
+        
+        # Connect inputs to the update function
+        for input_component in [dose_input, ka_input, half_life_input, dose_times_input, plot_duration_input, averaging_interval_input]:
+            input_component.change(
+                fn=update_plot,
+                inputs=[dose_input, ka_input, half_life_input, dose_times_input, plot_duration_input, averaging_interval_input],
+                outputs=plot_output
+            )
+        
+        # Set initial plot
+        iface.load(
+            fn=update_plot,
+            inputs=[dose_input, ka_input, half_life_input, dose_times_input, plot_duration_input, averaging_interval_input],
+            outputs=plot_output
+        )
 
     return iface
 
