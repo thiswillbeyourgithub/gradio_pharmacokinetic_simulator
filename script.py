@@ -316,20 +316,27 @@ def update_plot(
         fig : matplotlib.figure.Figure
             Updated plot figure
     """
-    # Input validation to prevent errors - handle None values first
-    if (
-        dose is None
-        or absorption_rate_constant is None
-        or half_life is None
-        or dose <= 0
-        or absorption_rate_constant <= 0
-        or half_life <= 0
-    ):
+    # Handle None values by setting sensible defaults to prevent Gradio validation errors
+    if dose is None:
+        dose = 100.0
+    if absorption_rate_constant is None:
+        absorption_rate_constant = 1.0
+    if half_life is None:
+        half_life = 8.0
+    if dose_times_str is None:
+        dose_times_str = "8,19"
+    if plot_duration is None:
+        plot_duration = 24.0
+    if averaging_interval is None:
+        averaging_interval = 4.0
+
+    # Input validation to prevent errors - check for positive values
+    if dose <= 0 or absorption_rate_constant <= 0 or half_life <= 0:
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.text(
             0.5,
             0.5,
-            "All numeric parameters must be positive values and not empty",
+            "All numeric parameters must be positive values",
             horizontalalignment="center",
             verticalalignment="center",
             transform=ax.transAxes,
@@ -339,9 +346,9 @@ def update_plot(
         return fig
 
     # Additional validation for plot_duration and averaging_interval
-    if plot_duration is None or plot_duration <= 0:
+    if plot_duration <= 0:
         plot_duration = 24.0
-    if averaging_interval is None or averaging_interval <= 0:
+    if averaging_interval <= 0:
         averaging_interval = 4.0
 
     # Parse dose times from string
