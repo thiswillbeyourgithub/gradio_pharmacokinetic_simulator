@@ -518,7 +518,7 @@ def create_gradio_interface() -> gr.Interface:
                 )
 
             with gr.Column():
-                plot_output = gr.Plot(label="Pharmacokinetic Profile")
+                plot_output = gr.Plot()
 
         # Connect inputs to the update function
         all_inputs = [
