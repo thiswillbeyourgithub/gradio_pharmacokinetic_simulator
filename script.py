@@ -156,7 +156,7 @@ def create_pk_plot(
     )
 
     # Create the plot with professional styling
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     # Plot concentration-time curve
     ax.plot(
@@ -299,7 +299,7 @@ def update_plot(
     """
     # Input validation to prevent errors
     if any(param <= 0 for param in [dose, absorption_rate_constant, half_life]):
-        fig, ax = plt.subplots(figsize=(12, 8))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.text(
             0.5,
             0.5,
@@ -307,7 +307,7 @@ def update_plot(
             horizontalalignment="center",
             verticalalignment="center",
             transform=ax.transAxes,
-            fontsize=16,
+            fontsize=14,
         )
         ax.set_title("Invalid Parameters", fontsize=14)
         return fig
@@ -325,7 +325,7 @@ def update_plot(
                 raise ValueError(f"Dose time {time} must be between 0 and 24 hours")
 
     except (ValueError, AttributeError) as e:
-        fig, ax = plt.subplots(figsize=(12, 8))
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.text(
             0.5,
             0.5,
@@ -333,7 +333,7 @@ def update_plot(
             horizontalalignment="center",
             verticalalignment="center",
             transform=ax.transAxes,
-            fontsize=14,
+            fontsize=12,
         )
         ax.set_title("Invalid Dose Times", fontsize=14)
         return fig
@@ -422,12 +422,12 @@ def create_gradio_interface() -> gr.Interface:
         outputs=outputs,
         title="Pharmacokinetic Simulation Tool",
         description="""
-        Simulate plasma drug concentrations over time with
-custom oral dosing schedules.
+        Simulate plasma drug concentrations over time with custom oral dosing schedules.
         Adjust the absorption rate constant (ka) and half-life parameters, and specify dosing times
-within a 24-hour period
-        to see how drug accumulation patterns change. The simulation models first-order absorption
-        and elimination kinetics. You can control the plot duration to see short-term or long-term behavior.
+        within a 24-hour period to see how drug accumulation patterns change. 
+        
+        <a href="https://go.drugbank.com/drugs/" target="_blank">Find drug parameters (half-life, etc.) on DrugBank</a>
+        
         Example: enter "8,19" for doses at 8am and 7pm daily.
         """,
         theme=gr.themes.Soft(),
