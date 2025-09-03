@@ -167,19 +167,19 @@ def create_pk_plot(
     # Use a rolling window approach to compute moving averages
     rolling_times = []
     rolling_averages = []
-    
+
     # Sample every 0.1 hours for smooth curve while maintaining performance
     time_step = 0.1
     sample_times = np.arange(averaging_interval, plot_duration + time_step, time_step)
-    
+
     for current_time in sample_times:
         # Define the window for averaging (current_time - averaging_interval to current_time)
         window_start = current_time - averaging_interval
         window_end = current_time
-        
+
         # Find all concentration points within this rolling window
         window_mask = (time_points >= window_start) & (time_points <= window_end)
-        
+
         if np.any(window_mask):
             # Calculate average concentration over this rolling window
             window_avg = np.mean(concentrations[window_mask])
