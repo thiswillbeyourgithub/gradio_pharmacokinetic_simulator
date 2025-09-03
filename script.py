@@ -317,12 +317,12 @@ def update_plot(
             Updated plot figure
     """
     # Input validation to prevent errors
-    if any(param <= 0 for param in [dose, absorption_rate_constant, half_life]):
+    if any(param is None or param <= 0 for param in [dose, absorption_rate_constant, half_life]):
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.text(
             0.5,
             0.5,
-            "All numeric parameters must be positive values",
+            "All numeric parameters must be positive values and not empty",
             horizontalalignment="center",
             verticalalignment="center",
             transform=ax.transAxes,
@@ -331,6 +331,12 @@ def update_plot(
         ax.set_title("Invalid Parameters", fontsize=14)
         return fig
 
+    # Additional validation for plot_duration and averaging_interval
+    if plot_duration is None or plot_duration <= 0:
+        plot_duration = 24.0
+    if averaging_interval is None or averaging_interval <= 0:
+        averaging_interval = 4.0
+    
     # Parse dose times from string
     try:
         dose_times = [float(t.strip()) for t in dose_times_str.split(",") if t.strip()]
