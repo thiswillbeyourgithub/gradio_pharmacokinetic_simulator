@@ -253,6 +253,25 @@ def create_pk_plot(
     ax.grid(True, alpha=0.3)
     ax.legend()
 
+    # Calculate Cmax and time of Cmax
+    max_concentration = np.max(concentrations)
+    max_time_index = np.argmax(concentrations)
+    time_at_max = time_points[max_time_index]
+    
+    # Add Cmax annotation on the plot
+    ax.annotate(
+        f'Cmax = {max_concentration:.2f}\nat t = {time_at_max:.1f}h',
+        xy=(time_at_max, max_concentration),
+        xytext=(time_at_max + plot_duration * 0.1, max_concentration * 0.9),
+        arrowprops=dict(arrowstyle='->', color='red', lw=1.5),
+        fontsize=11,
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.7),
+        horizontalalignment='left'
+    )
+    
+    # Add a marker at Cmax point
+    ax.plot(time_at_max, max_concentration, 'ro', markersize=8, zorder=5)
+
     # Set reasonable y-axis limits
     ax.set_ylim(0, np.max(concentrations) * 1.1)
     ax.set_xlim(0, plot_duration)
