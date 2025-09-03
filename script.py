@@ -517,7 +517,7 @@ def create_gradio_interface() -> gr.Interface:
             plot_duration_input,
             averaging_interval_input,
         ]
-        
+
         for input_component in all_inputs:
             input_component.change(
                 fn=update_plot,
