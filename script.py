@@ -253,10 +253,14 @@ def create_pk_plot(
     ax.grid(True, alpha=0.3)
     ax.legend()
 
-    # Calculate Cmax and time of Cmax
-    max_concentration = np.max(concentrations)
-    max_time_index = np.argmax(concentrations)
-    time_at_max = time_points[max_time_index]
+    # Calculate Cmax and time of Cmax for first 24 hours only
+    first_24h_mask = time_points <= 24.0
+    concentrations_24h = concentrations[first_24h_mask]
+    time_points_24h = time_points[first_24h_mask]
+    
+    max_concentration = np.max(concentrations_24h)
+    max_time_index = np.argmax(concentrations_24h)
+    time_at_max = time_points_24h[max_time_index]
 
     # Add Cmax annotation on the plot
     ax.annotate(
@@ -489,12 +493,12 @@ def create_gradio_interface() -> gr.Interface:
                     placeholder="8,19",
                 )
                 plot_duration_input = gr.Slider(
-                    minimum=1,
+                    minimum=24,
                     maximum=168,
                     value=24,
                     step=1,
                     label="Plot Duration (hours)",
-                    info="Total duration to simulate and plot (1-168 hours, default 24h)",
+                    info="Total duration to simulate and plot (24-168 hours, minimum 24h)",
                 )
                 averaging_interval_input = gr.Slider(
                     minimum=0.5,
