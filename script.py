@@ -333,7 +333,7 @@ def update_plot(
     if half_life is None:
         half_life = 8.0
     if dose_times_str is None:
-        dose_times_str = "8,19"
+        dose_times_str = "8"
     if plot_duration is None:
         plot_duration = 24.0
     if averaging_interval is None:
@@ -492,7 +492,7 @@ def create_gradio_interface() -> gr.Interface:
                     info="Time for drug concentration to decrease by 50%",
                 )
                 dose_times_input = gr.Textbox(
-                    value="8,19",
+                    value="8",
                     label="Dosing Times (hours)",
                     info="Comma-separated times in 24h format (e.g., '8,19' for 8am and 7pm)",
                     placeholder="8,19",
