@@ -401,59 +401,6 @@ def create_gradio_interface() -> gr.Interface:
         iface : gradio.Interface
             Configured Gradio interface ready for launch
     """
-    # Define input components with reasonable defaults and ranges
-    inputs = [
-        gr.Slider(
-            minimum=1,
-            maximum=1000,
-            value=100,
-            step=1,
-            label="Dose (mg)",
-            info="Amount of drug administered per dose",
-        ),
-        gr.Slider(
-            minimum=0.1,
-            maximum=10,
-            value=1.0,
-            step=0.1,
-            label="Absorption Rate Constant (1/h)",
-            info="First-order absorption rate constant (ka)",
-        ),
-        gr.Slider(
-            minimum=0.5,
-            maximum=48,
-            value=8,
-            step=0.5,
-            label="Half-life (hours)",
-            info="Time for drug concentration to decrease by 50%",
-        ),
-        gr.Textbox(
-            value="8,19",
-            label="Dosing Times (hours)",
-            info="Comma-separated times in 24h format (e.g., '8,19' for 8am and 7pm)",
-            placeholder="8,19",
-        ),
-        gr.Slider(
-            minimum=1,
-            maximum=168,
-            value=24,
-            step=1,
-            label="Plot Duration (hours)",
-            info="Total duration to simulate and plot (1-168 hours, default 24h)",
-        ),
-        gr.Slider(
-            minimum=0.5,
-            maximum=24,
-            value=4.0,
-            step=0.5,
-            label="Averaging Interval (hours)",
-            info="Time interval for computing average concentrations (0.5-24 hours)",
-        ),
-    ]
-
-    # Define output component
-    outputs = gr.Plot(label="Pharmacokinetic Profile")
-
     # Create interface with professional styling and model assumptions
     with gr.Blocks(
         theme=gr.themes.Soft(), title="Pharmacokinetic Simulation Tool"
@@ -510,49 +457,78 @@ def create_gradio_interface() -> gr.Interface:
 
         with gr.Row():
             with gr.Column():
-                dose_input = inputs[0]
-                ka_input = inputs[1]
-                half_life_input = inputs[2]
-                dose_times_input = inputs[3]
-                plot_duration_input = inputs[4]
-                averaging_interval_input = inputs[5]
+                # Define input components directly to avoid None initialization issues
+                dose_input = gr.Slider(
+                    minimum=1,
+                    maximum=1000,
+                    value=100,
+                    step=1,
+                    label="Dose (mg)",
+                    info="Amount of drug administered per dose",
+                )
+                ka_input = gr.Slider(
+                    minimum=0.1,
+                    maximum=10,
+                    value=1.0,
+                    step=0.1,
+                    label="Absorption Rate Constant (1/h)",
+                    info="First-order absorption rate constant (ka)",
+                )
+                half_life_input = gr.Slider(
+                    minimum=0.5,
+                    maximum=48,
+                    value=8,
+                    step=0.5,
+                    label="Half-life (hours)",
+                    info="Time for drug concentration to decrease by 50%",
+                )
+                dose_times_input = gr.Textbox(
+                    value="8,19",
+                    label="Dosing Times (hours)",
+                    info="Comma-separated times in 24h format (e.g., '8,19' for 8am and 7pm)",
+                    placeholder="8,19",
+                )
+                plot_duration_input = gr.Slider(
+                    minimum=1,
+                    maximum=168,
+                    value=24,
+                    step=1,
+                    label="Plot Duration (hours)",
+                    info="Total duration to simulate and plot (1-168 hours, default 24h)",
+                )
+                averaging_interval_input = gr.Slider(
+                    minimum=0.5,
+                    maximum=24,
+                    value=4.0,
+                    step=0.5,
+                    label="Averaging Interval (hours)",
+                    info="Time interval for computing average concentrations (0.5-24 hours)",
+                )
 
             with gr.Column():
-                plot_output = outputs
+                plot_output = gr.Plot(label="Pharmacokinetic Profile")
 
         # Connect inputs to the update function
-        for input_component in [
+        all_inputs = [
             dose_input,
             ka_input,
             half_life_input,
             dose_times_input,
             plot_duration_input,
             averaging_interval_input,
-        ]:
+        ]
+        
+        for input_component in all_inputs:
             input_component.change(
                 fn=update_plot,
-                inputs=[
-                    dose_input,
-                    ka_input,
-                    half_life_input,
-                    dose_times_input,
-                    plot_duration_input,
-                    averaging_interval_input,
-                ],
+                inputs=all_inputs,
                 outputs=plot_output,
             )
 
         # Set initial plot
         iface.load(
             fn=update_plot,
-            inputs=[
-                dose_input,
-                ka_input,
-                half_life_input,
-                dose_times_input,
-                plot_duration_input,
-                averaging_interval_input,
-            ],
+            inputs=all_inputs,
             outputs=plot_output,
         )
 
