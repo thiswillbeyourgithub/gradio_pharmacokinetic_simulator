@@ -316,11 +316,9 @@ def update_plot(
         fig : matplotlib.figure.Figure
             Updated plot figure
     """
-    # Input validation to prevent errors
-    if any(
-        param is None or param <= 0
-        for param in [dose, absorption_rate_constant, half_life]
-    ):
+    # Input validation to prevent errors - handle None values first
+    if (dose is None or absorption_rate_constant is None or half_life is None or
+        dose <= 0 or absorption_rate_constant <= 0 or half_life <= 0):
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.text(
             0.5,
