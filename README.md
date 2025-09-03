@@ -2,6 +2,8 @@
 
 A Gradio-based web interface for simulating plasma drug concentrations over time with multiple dosing regimens. This interactive tool helps visualize drug accumulation patterns and pharmacokinetic behavior based on key parameters like absorption rate, elimination half-life, and dosing schedules.
 
+![](./screenshot.png)
+
 ## Background
 
 I created this tool because I wanted to work my intuition on pharmacokinetic concepts - specifically how different dosing schedules, absorption rates, and elimination half-lives affect drug concentration profiles over time. Having an interactive visualization makes it much easier to understand these relationships compared to static equations or tables.
