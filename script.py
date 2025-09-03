@@ -335,9 +335,12 @@ def update_plot(
     if dose_times_str is None:
         dose_times_str = "8"
     if plot_duration is None:
-        plot_duration = 24.0
+        plot_duration = 1.0
     if averaging_interval is None:
         averaging_interval = 4.0
+    
+    # Convert plot duration from days to hours for calculations
+    plot_duration_hours = plot_duration * 24
 
     # Input validation to prevent errors - check for positive values
     if dose <= 0 or absorption_rate_constant <= 0 or half_life <= 0:
@@ -356,7 +359,7 @@ def update_plot(
 
     # Additional validation for plot_duration and averaging_interval
     if plot_duration <= 0:
-        plot_duration = 24.0
+        plot_duration_hours = 24.0
     if averaging_interval <= 0:
         averaging_interval = 4.0
 
@@ -391,7 +394,7 @@ def update_plot(
         absorption_rate_constant,
         half_life,
         dose_times,
-        plot_duration,
+        plot_duration_hours,
         averaging_interval,
     )
 
@@ -498,12 +501,12 @@ def create_gradio_interface() -> gr.Interface:
                     placeholder="8,19",
                 )
                 plot_duration_input = gr.Slider(
-                    minimum=24,
-                    maximum=168,
-                    value=24,
+                    minimum=1,
+                    maximum=30,
+                    value=1,
                     step=1,
-                    label="Plot Duration (hours)",
-                    info="Total duration to simulate and plot (24-168 hours, minimum 24h)",
+                    label="Plot Duration (days)",
+                    info="Total duration to simulate and plot (1-30 days)",
                 )
                 averaging_interval_input = gr.Slider(
                     minimum=0.5,
