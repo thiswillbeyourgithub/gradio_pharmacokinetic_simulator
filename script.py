@@ -260,7 +260,7 @@ def create_pk_plot(
 
     # Add Cmax annotation on the plot
     ax.annotate(
-        f"Cmax = {max_concentration:.2f}\nat t = {time_at_max:.1f}h",
+        f"Cmax = {max_concentration:.2f}\nTmax = {time_at_max:.1f}h",
         xy=(time_at_max, max_concentration),
         xytext=(time_at_max + plot_duration * 0.1, max_concentration * 0.9),
         arrowprops=dict(arrowstyle="->", color="red", lw=1.5),
